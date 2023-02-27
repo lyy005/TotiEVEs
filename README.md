@@ -1,4 +1,4 @@
-# TotiEVEs
+# Domesticated non-retroviral integrated RNA virus sequences serving host cellular innovations in arthropods
 
 This document is a walkthrough of the methods and code used to analyze Endogenous Toti-Like Viral Elements (ETLVEs) in three planthopper genomes, including *Sogatella furcifera* (GCA_014356515.1), *Laodelphax striatellus* (GCA_014465815.1), and *Nilaparvata lugens* (GCA_014356525.1). 
 
