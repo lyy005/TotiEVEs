@@ -10,7 +10,7 @@ Genomes of three planthopper species were downloaded from NCBI (GCA_014465815.1 
 
 Genome annotations of the three species were downloaded from 
 
-## 1.1 - EVE loci in planthopper genomes
+### 1.1 - EVE loci in planthopper genomes
 
         # BLAST. BLAST inputs for Sogatella furcifera (EVEs_sf.fa), Laodelphax striatellus (EVEs_ls.fa), and Nilaparvata lugens (EVEs_nl.fa) are available under ./step1.1_BLAST/. Genome sequences were downloaded from NCBI. 
         # Sogatella furcifera
@@ -25,26 +25,49 @@ Genome annotations of the three species were downloaded from
         # Only matches with >99% global identity are kept for downstream analyses
         # Filtered BLAST hits can be found here: ./step1.1_BLAST/*.blast.filtered
 
-## 1.2 - Orthologs assignment
+### 1.2 - Orthologs assignment
 
         cd ./step1.2_orthology/
-        # Find the longest isoform
+        # Find the longest isoform. Protein sequences (Nilaparvata_lugens.anno.pep.fa, Sogatella_furcifera.anno.pep.fa, and Laodelphax_striatellus.anno.pep.fa) were downloaded from http://v2.insect-genome.com/Organism/572 for Nilaparvata lugens, http://v2.insect-genome.com/Organism/709 for Sogatella furcifera, and http://v2.insect-genome.com/Organism/477 for Laodelphax striatellus. 
+        perl find_longest_protein_Braker_v20210403b.pl Nilaparvata_lugens.anno.pep.fa Nilaparvata_lugens.anno.pep.fa.longest
         perl find_longest_protein_Braker_v20210403b.pl Sogatella_furcifera.anno.pep.fa Sogatella_furcifera.anno.pep.fa.longest
         perl find_longest_protein_Braker_v20210403b.pl Laodelphax_striatellus.anno.pep.fa Laodelphax_striatellus.anno.pep.fa.longest
-        perl find_longest_protein_Braker_v20210403b.pl Nilaparvata_lugens.anno.pep.fa Nilaparvata_lugens.anno.pep.fa.longest
         
         # Remove the proteins with stop codons
-        less -S Laodelphax_striatellus.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Laodelphax_striatellus.anno.pep.fa.noStopCodon
         less -S Nilaparvata_lugens.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Nilaparvata_lugens.anno.pep.fa.noStopCodon
         less -S Sogatella_furcifera.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Sogatella_furcifera.anno.pep.fa.longest.noStopCodon
+        less -S Laodelphax_striatellus.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Laodelphax_striatellus.anno.pep.fa.noStopCodon
         
         # Copy proteins to a new folder for OrthoFinder
-        cp Laodelphax_striatellus.anno.pep.fa run1/Last.faa
         cp Nilaparvata_lugens.anno.pep.fa run1/Nilu.faa
         cp Sogatella_furcifera.anno.pep.fa.longest run1/Sofu.faa
+        cp Laodelphax_striatellus.anno.pep.fa run1/Last.faa
         
         # Run OrthoFinder version 2.5.4
         python ~/bin/orthoFinder_v2.5.4/OrthoFinder_source/orthofinder.py -t 40 -a 40 -f run1
+        
+        # Find 1:1:1 orthologs among three planthopper species
+        cp ../run2_noStopCodon/OrthoFinder/Results_Aug09/Orthogroups/Orthogroups.GeneCount.tsv ./
+        cp -r ../run2_noStopCodon/OrthoFinder/Results_Aug09/Orthogroup_Sequences/ ./
+        
+        perl ./step1.2_orthology/filter_orthologs.pl Orthogroups.GeneCount.tsv 1 Orthogroups.GeneCount.tsv.1.0
+        
+        # Batch mafft-linsi (version 7.505) and Gblocks (version 0.91b)
+        perl ./step1.2_orthology/concatenate.pl Orthogroups.GeneCount.tsv.1.0 Orthogroup_Sequences/ Orthogroups.GeneCount.tsv.1.0.fasta
+
+
+### 1.3 - Estimating gene evolutionary rate by calculating protein distance
+
+        # Calculate p-distance and gap ratio in batch. Sequences with gap ratio >=10% were removed from downstream analyses. 
+        perl ./step1.3_evolutionary_rate/calculate_distance_batch.p_distance.pl Orthogroups.GeneCount.tsv.1.0 ./Ortholog_Alignment/
+        
+        # Combine all the distance outputs
+        grep "Average" ./Ortholog_Alignment/*distance | perl -ne 'if(/\/(\w+)\./){ @a=split; print "$1\t$a[-1]\n"; }' > dist_noGBlocks_gapFiltered.summary
+        
+        # Assign slow-evolving and fast-evolving genes; we have 1,462 genes, 5% would be 1,462 x 0.05 = 73
+        # Therefore, the top 5% and bottom 5% genes were assigned as fast-evolving and slow-evolving genes
+        sort -k2,2nr dist_noGBlocks_gapFiltered.summary | head -73 > dist.summary.fastEvolving
+        sort -k2,2nr dist_noGBlocks_gapFiltered.summary | tail -73 > dist.summary.slowEvolving
 
 
 ## 2 - Distribution of ETLVEs in planthopper individuals
