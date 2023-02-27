@@ -26,12 +26,18 @@ Genome annotations of the three species were downloaded from
         perl find_longest_protein_Braker_v20210403b.pl Laodelphax_striatellus.anno.pep.fa Laodelphax_striatellus.anno.pep.fa.longest
         perl find_longest_protein_Braker_v20210403b.pl Nilaparvata_lugens.anno.pep.fa Nilaparvata_lugens.anno.pep.fa.longest
         
-        # remove the proteins with stop codons
+        # Remove the proteins with stop codons
         less -S Laodelphax_striatellus.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Laodelphax_striatellus.anno.pep.fa.noStopCodon
-        
         less -S Nilaparvata_lugens.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Nilaparvata_lugens.anno.pep.fa.noStopCodon
-        
         less -S Sogatella_furcifera.anno.pep.fa.longest | perl -e '$/=">"; <>; while(<>){ chomp; @line = split/\n/; $name = shift @line; $seq = join "", @line; if($seq=~/X/){ }elsif(/\*/){ }else{ print ">$name\n$seq\n"; } } ' > Sogatella_furcifera.anno.pep.fa.longest.noStopCodon
+        
+        # Copy proteins to a new folder for OrthoFinder
+        cp Laodelphax_striatellus.anno.pep.fa run1/Last.faa
+        cp Nilaparvata_lugens.anno.pep.fa run1/Nilu.faa
+        cp Sogatella_furcifera.anno.pep.fa.longest run1/Sofu.faa
+        
+        # Run OrthoFinder version 2.5.4
+        python ~/bin/orthoFinder_v2.5.4/OrthoFinder_source/orthofinder.py -t 40 -a 40 -f run1
 
 
 ## 2 - Distribution of ETLVEs in planthopper individuals
