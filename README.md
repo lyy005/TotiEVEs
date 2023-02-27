@@ -12,8 +12,15 @@ Genome annotations of the three species were downloaded from
 
 ## 1.1 - EVE loci in planthopper genomes
 
-        # BLAST. Files are available under ./step1.1_BLAST/
-        blastn -db LsHau_GCA_014465815.1_genomic.fa -query EVEs_ls.fa -out EVEs_ls.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        # BLAST. BLAST inputs for Sogatella furcifera (EVEs_sf.fa), Laodelphax striatellus (EVEs_ls.fa), and Nilaparvata lugens (EVEs_nl.fa) are available under ./step1.1_BLAST/. Genome sequences were downloaded from NCBI. 
+        # Sogatella furcifera
+        blastn -db Sf_GCA_014356515.1_genomic.fa -query EVEs_sf.fa -out EVEs_sf.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        
+        # Laodelphax striatellus
+        blastn -db Ls_GCA_014465815.1_genomic.fa -query EVEs_ls.fa -out EVEs_ls.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        
+        # Nilaparvata lugens
+        blastn -db Nl_GCA_014356525.1_genomic.fa -query EVEs_nl.fa -out EVEs_nl.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
         
         # Only matches with >99% global identity are kept for downstream analyses
         # Filtered BLAST hits can be found here: ./step1.1_BLAST/*.blast.filtered
