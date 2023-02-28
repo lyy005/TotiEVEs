@@ -178,7 +178,10 @@ To evaluate whether the EVEs are present in each sample, we used mosdepth to est
         do
          perl EVE_filter_depth.pl ./EVE$j\/$i\.regions.bed.gz ./EVE$j\/$i\.regions.bed.EVEfilter
         done
-        
+
+### 2.4 - Detect hemizygous ETLVE regions
+
+
 ## 3 - Heterozygosity of ETLVEs in planthoppers
 ### 3.1 - SNP calling using GATK haplotypeCaller
         
