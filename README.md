@@ -56,7 +56,7 @@ Genome annotations of the three species were downloaded from
         perl ./step1.2_orthology/concatenate.pl Orthogroups.GeneCount.tsv.1.0 Orthogroup_Sequences/ Orthogroups.GeneCount.tsv.1.0.fasta
 
 
-### 1.3 - Estimating gene evolutionary rate by calculating protein distance
+### 1.3 - Search for top 5% fast-evolving and top 5% slow-evolving genes in 1:1:1 single-copy orthologs among three planthopper species
 
         # Calculate p-distance and gap ratio in batch. Sequences with gap ratio >=10% were removed from downstream analyses. 
         perl ./step1.3_evolutionary_rate/calculate_distance_batch.p_distance.pl Orthogroups.GeneCount.tsv.1.0 ./Ortholog_Alignment/
@@ -68,6 +68,21 @@ Genome annotations of the three species were downloaded from
         # Therefore, the top 5% and bottom 5% genes were assigned as fast-evolving and slow-evolving genes
         sort -k2,2nr dist_noGBlocks_gapFiltered.summary | head -73 > dist.summary.fastEvolving
         sort -k2,2nr dist_noGBlocks_gapFiltered.summary | tail -73 > dist.summary.slowEvolving
+        
+        # Find fast-evolving and slow-evolving genes in Sogatella furcifera, Laodelphax striatellus, and Nilaparvata lugens 
+        less -S dist.summary.slowEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Ortholog_Alignment/$a[0].GBlocks.fas ../../step6_LoP/slowGenes/`; '
+        cat *.fas | grep -A 1 Sfur | grep -v "^\-\-" > ../slowGenes.aa.fasta
+        
+        less -S dist.summary.fastEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Orthogroup_Sequences/$a[0].fa ./fastGenes/`; '
+        less -S dist.summary.slowEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Orthogroup_Sequences/$a[0].fa ./slowGenes/`; '
+        
+        cat ./fastGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.fastGenes.aa.fasta
+        cat ./slowGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.slowGenes.aa.fasta
+        
+        # for the manuscript - list all the gene IDs in fast and slow OG group
+        grep ">" slowGenes/*.fa | perl -e 'while(<>){chomp; s/fastGenes\///; @a=split/\:\>/; $hash{$a[0]} .= " ".$a[1]; } foreach $k (sort keys %hash){ print "$k\t$hash{$k}\n"; } '
+        
+        
 
 
 ## 2 - Distribution of ETLVEs in planthopper individuals
