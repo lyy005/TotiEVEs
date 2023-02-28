@@ -120,7 +120,7 @@ Fast- and slow-evolving protein sequences were first extracted from orthologous 
 
 ### 2.1 - Mapping
 
-To understand the distribution of ETLVEs, we mapped Illumina reads to planthopper genomes using BWA MEM (version 0.7.17). Note that for your analysis, please replace $sampleID to the actual sample names. 
+To understand the distribution of ETLVEs, we mapped Illumina reads to planthopper genomes using BWA MEM (version 0.7.17). Note that for your analysis, please replace $sampleID with the actual sample names. 
 
         # BWA MEM version 0.7.17
         ~/bin/bwa mem -M -t 40 -R '@RG\tID:'"$sampleID"'\tSM:'"$sampleID"'\tPL:Illumina' -o $sampleID.sam LsHau_GCA_014465815.1_genomic.fa ./links/$sampleID_1_clean.fq.gz ./links/$sampleID_2_clean.fq.gz
@@ -136,9 +136,9 @@ To understand the distribution of ETLVEs, we mapped Illumina reads to planthoppe
         ~/bin/samtools sort --threads 40 $sampleID_markdup.bam > $sampleID_markdup.sorted.bam
         ~/bin/samtools index -@ 40 $sampleID_markdup.sorted.bam
         
-### 2.2 - Estimating depth using mosdepth
+### 2.2 - Estimating overall sample depth with 100-bp sliding window using mosdepth
 
-To understand the distribution of ETLVEs, we mapped Illumina reads to planthopper genomes using BWA MEM (version 0.7.17). Note that for your analysis, please replace $sampleID to the actual sample names. 
+Mosdepth version 0.3.3 was used to estimate average sequencing depth for each sample. Note that please replace $sampleID with the actual sample names.
 
         for i in sf_GCA_014356515.1_genomic.fa ls_GCA_014465815.1_genomic.fa nl_GCA_014356525.1_genomic.fa
         do
@@ -152,9 +152,36 @@ To understand the distribution of ETLVEs, we mapped Illumina reads to planthoppe
          # step 2 calculating depth using mosdepth
          # changed mapq from 20 to 0
          mosdepth --threads 20 --fast-mode --mapq 0 -n --by $i\.bed.100 $sampleID\.100bp $sampleID\.sorted.bam
-         
         done
 
+### 2.3 - Estimating per-base pair depth using mosdepth
+
+To evaluate whether the EVEs are present in each sample, we used mosdepth to estimate per-base pair sequencing depth for each ETLVE. The ETLVE was identified as presence if the sequencing depth is higher than 5 for at least 50% of that ETLVE region. 
+        
+        # make 1 bp sliding window
+        bedtools makewindows -g genome.txt -w 1 > SfHau_GCA_014356515.1_genomic.fa.bed.1
+        
+        # Prepare a bed file for each ETLVE, EVEs_sf.blast was from step1.1
+        # For example, for Sogatella furcifera, the BLAST input file (generated from step1.1) looks like this: 
+        # 2944	41453656	SfETLVE1_Chr7_length_2944_32054052_32056995	CM025296.1	100.000	2944	0	0	1	2944	32054052	32056995	0.0	5437
+        # 1020	33928560	SfETLVE2_Chr8_length_1020_17350607_17351626	CM025297.1	100.000	1020	0	0	1	1020	17350607	17351626	0.0	1884
+        # 822	33928560	SfETLVE3_Chr8_length_822_21854812_21855633	CM025297.1	100.000	822	0	0	1	822	21854812	21855633	0.0	1519
+        # 822	34689497	SfETLVE3_Chr8_length_822_21854812_21855633	CM025300.1	99.859	709	1	0	1	709	16941783	16942491	0.0	1304
+        
+        # Create bed files
+        perl batch_prep_mosdepth_bed.pl EVEs_sf.blast sf_GCA_014356515.1_genomic.fa.bed.1 sf_GCA_014356515.1_genomic.fa.bed.1
+        
+        mosdepth --threads 20 -b sf_GCA_014356515.1_genomic.fa.bed.1.EVE1 --fast-mode --mapq 0 $sampleID $sampleID\.sorted.bam
+        mosdepth --threads 20 -b sf_GCA_014356515.1_genomic.fa.bed.1.EVE2 --fast-mode --mapq 0 $sampleID $sampleID\.sorted.bam
+        mosdepth --threads 20 -b sf_GCA_014356515.1_genomic.fa.bed.1.EVE3 --fast-mode --mapq 0 $sampleID $sampleID\.sorted.bam
+        mosdepth --threads 20 -b sf_GCA_014356515.1_genomic.fa.bed.1.EVE4 --fast-mode --mapq 0 $sampleID $sampleID\.sorted.bam
+        
+        # Calculate the percentage of ETLVE regions with depth >= 5x and coverage >= 50%
+        for j in {1..4}
+        do
+         perl EVE_filter_depth.pl ./EVE$j\/$i\.regions.bed.gz ./EVE$j\/$i\.regions.bed.EVEfilter
+        done
+        
 ### 2.2 - SNP calling using GATK haplotypeCaller and create VCF files
         
         # HaplotypeCaller to make GVCF files
