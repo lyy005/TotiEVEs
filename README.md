@@ -2,13 +2,11 @@
 
 This document is a walkthrough of the methods and code used to analyze Endogenous Toti-Like Viral Elements (ETLVEs) in three planthopper genomes, including *Sogatella furcifera* (GCA_014356515.1), *Laodelphax striatellus* (GCA_014465815.1), and *Nilaparvata lugens* (GCA_014356525.1). 
 
-## 1 - Distribution of ETLVEs in planthopper individuals
+## 1 - Search for loci of ETLVEs, fast-evolving genes and slow-evolving genes in planthopper genomes
 
-To understand the heterozygosity of EVEs, fast-evolving and slow-evolving genes in planthoppers, we first identified fast-evolving and slow-evolving genes gene and related regions in the genome. 
+To compare the evolution among ETLVEs, fast-evolving and slow-evolving genes in planthoppers, we first identified the loci of ETLVEs, fast-evolving and slow-evolving genes in the genome. 
 
 Genomes of three planthopper species were downloaded from NCBI (GCA_014465815.1 for *Laodelphax striatellus*, GCA_014356515.1 for *Sogatella furcifera*, and GCA_014356525.1 for *Nilaparvata lugens*). 
-
-Genome annotations of the three species were downloaded from 
 
 ### 1.1 - EVE loci in planthopper genomes
 
@@ -26,9 +24,10 @@ Genome annotations of the three species were downloaded from
         # Filtered BLAST hits can be found here: ./step1.1_BLAST/*.blast.filtered
 
 ### 1.2 - Orthologs assignment
+Protein sequences (Nilaparvata_lugens.anno.pep.fa, Sogatella_furcifera.anno.pep.fa, and Laodelphax_striatellus.anno.pep.fa) were downloaded from http://v2.insect-genome.com/Organism/572 for Nilaparvata lugens, http://v2.insect-genome.com/Organism/709 for Sogatella furcifera, and http://v2.insect-genome.com/Organism/477 for Laodelphax striatellus. 
 
         cd ./step1.2_orthology/
-        # Find the longest isoform. Protein sequences (Nilaparvata_lugens.anno.pep.fa, Sogatella_furcifera.anno.pep.fa, and Laodelphax_striatellus.anno.pep.fa) were downloaded from http://v2.insect-genome.com/Organism/572 for Nilaparvata lugens, http://v2.insect-genome.com/Organism/709 for Sogatella furcifera, and http://v2.insect-genome.com/Organism/477 for Laodelphax striatellus. 
+        # Find the longest isoform. 
         perl find_longest_protein_Braker_v20210403b.pl Nilaparvata_lugens.anno.pep.fa Nilaparvata_lugens.anno.pep.fa.longest
         perl find_longest_protein_Braker_v20210403b.pl Sogatella_furcifera.anno.pep.fa Sogatella_furcifera.anno.pep.fa.longest
         perl find_longest_protein_Braker_v20210403b.pl Laodelphax_striatellus.anno.pep.fa Laodelphax_striatellus.anno.pep.fa.longest
@@ -113,8 +112,6 @@ Fast- and slow-evolving protein sequences were first extracted from orthologous 
         
         less -S sf.fastGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > sf.fastGenes.aa.fasta.blast.filter
         less -S sf.slowGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > sf.slowGenes.aa.fasta.blast.filter
-        
-        
 
 ## 2 - Distribution of ETLVEs in planthopper individuals
 
@@ -159,7 +156,7 @@ Mosdepth version 0.3.3 was used to estimate average sequencing depth for each sa
 To evaluate whether the EVEs are present in each sample, we used mosdepth to estimate per-base pair sequencing depth for each ETLVE. The ETLVE was identified as presence if the sequencing depth is higher than 5 for at least 50% of that ETLVE region. 
         
         # make 1 bp sliding window
-        bedtools makewindows -g genome.txt -w 1 > SfHau_GCA_014356515.1_genomic.fa.bed.1
+        bedtools makewindows -g genome.txt -w 1 > sf_GCA_014356515.1_genomic.fa.bed.1
         
         # Prepare a bed file for each ETLVE, EVEs_sf.blast was from step1.1
         # For example, for Sogatella furcifera, the BLAST input file (generated from step1.1) looks like this: 
@@ -182,7 +179,8 @@ To evaluate whether the EVEs are present in each sample, we used mosdepth to est
          perl EVE_filter_depth.pl ./EVE$j\/$i\.regions.bed.gz ./EVE$j\/$i\.regions.bed.EVEfilter
         done
         
-### 2.2 - SNP calling using GATK haplotypeCaller and create VCF files
+## 3 - Heterozygosity of ETLVEs in planthoppers
+### 3.1 - SNP calling using GATK haplotypeCaller and create VCF files
         
         # HaplotypeCaller to make GVCF files
         ~/bin/gatk-4.2.6.1/gatk HaplotypeCaller -R NlHau_GCA_014356525.1_genomic.fa -I $sampleID_markdup.sorted.bam -O $sampleID_markdup.EVE.gvcf.gz --native-pair-hmm-threads 40 --intervals EVE_fast_slow.sort.list -ERC GVCF --disable-read-filter MappingQualityReadFilter
