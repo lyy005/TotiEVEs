@@ -151,7 +151,7 @@ To understand the distribution of ETLVEs, we mapped Illumina reads to planthoppe
         
          # step 2 calculating depth using mosdepth
          # changed mapq from 20 to 0
-         mosdepth --threads 20 --fast-mode --mapq 0 -n --by $i\.bed.100 $sampleID.100bp $sampleID.sorted.bam
+         mosdepth --threads 20 --fast-mode --mapq 0 -n --by $i\.bed.100 $sampleID\.100bp $sampleID\.sorted.bam
          
         done
 
