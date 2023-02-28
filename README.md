@@ -136,6 +136,25 @@ To understand the distribution of ETLVEs, we mapped Illumina reads to planthoppe
         ~/bin/samtools sort --threads 40 $sampleID_markdup.bam > $sampleID_markdup.sorted.bam
         ~/bin/samtools index -@ 40 $sampleID_markdup.sorted.bam
         
+### 2.2 - Estimating depth using mosdepth
+
+To understand the distribution of ETLVEs, we mapped Illumina reads to planthopper genomes using BWA MEM (version 0.7.17). Note that for your analysis, please replace $sampleID to the actual sample names. 
+
+        for i in sf_GCA_014356515.1_genomic.fa ls_GCA_014465815.1_genomic.fa nl_GCA_014356525.1_genomic.fa
+        do
+         ## make a genome file
+         samtools faidx $i
+         awk -v OFS='\t' {'print $1,$2'} $i\.fai > genome.txt
+        
+         ## make 100 bp sliding window
+         bedtools makewindows -g genome.txt -w 100 > $i\.bed.100
+        
+         # step 2 calculating depth using mosdepth
+         # changed mapq from 20 to 0
+         mosdepth --threads 20 --fast-mode --mapq 0 -n --by $i\.bed.100 $sampleID.100bp $sampleID.sorted.bam
+         
+        done
+
 ### 2.2 - SNP calling using GATK haplotypeCaller and create VCF files
         
         # HaplotypeCaller to make GVCF files
