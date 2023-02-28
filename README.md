@@ -180,7 +180,7 @@ To evaluate whether the EVEs are present in each sample, we used mosdepth to est
         done
         
 ## 3 - Heterozygosity of ETLVEs in planthoppers
-### 3.1 - SNP calling using GATK haplotypeCaller and create VCF files
+### 3.1 - SNP calling using GATK haplotypeCaller
         
         # HaplotypeCaller to make GVCF files
         ~/bin/gatk-4.2.6.1/gatk HaplotypeCaller -R NlHau_GCA_014356525.1_genomic.fa -I $sampleID_markdup.sorted.bam -O $sampleID_markdup.EVE.gvcf.gz --native-pair-hmm-threads 40 --intervals EVE_fast_slow.sort.list -ERC GVCF --disable-read-filter MappingQualityReadFilter
@@ -195,7 +195,7 @@ To evaluate whether the EVEs are present in each sample, we used mosdepth to est
         # Filter VCF files
         ~/bin/gatk-4.2.6.1/gatk VariantFiltration -V output.EVE.g.vcf.gz -filter "AF < 0.1" --filter-name "AF0.1" -O output.EVE.snp_indel_filtered.vcf.gz
         
-### 2.3 - Perl script to calculate heterozygosity
+### 3.2 - Perl script to calculate heterozygosity
         # For each EVE
         # Example BLAST input: 
         # 2944	41453656	SfETLVE1_Chr7_length_2944_32054052_32056995	CM025296.1	100.000	2944	0	0	1	2944	32054052	32056995	0.0	5437
