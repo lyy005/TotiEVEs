@@ -14,13 +14,13 @@ Genome annotations of the three species were downloaded from
 
         # BLAST. BLAST inputs for Sogatella furcifera (EVEs_sf.fa), Laodelphax striatellus (EVEs_ls.fa), and Nilaparvata lugens (EVEs_nl.fa) are available under ./step1.1_BLAST/. Genome sequences were downloaded from NCBI. 
         # Sogatella furcifera
-        blastn -db Sf_GCA_014356515.1_genomic.fa -query EVEs_sf.fa -out EVEs_sf.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        blastn -db sf_GCA_014356515.1_genomic.fa -query EVEs_sf.fa -out EVEs_sf.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
         
         # Laodelphax striatellus
-        blastn -db Ls_GCA_014465815.1_genomic.fa -query EVEs_ls.fa -out EVEs_ls.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        blastn -db ls_GCA_014465815.1_genomic.fa -query EVEs_ls.fa -out EVEs_ls.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
         
         # Nilaparvata lugens
-        blastn -db Nl_GCA_014356525.1_genomic.fa -query EVEs_nl.fa -out EVEs_nl.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
+        blastn -db nl_GCA_014356525.1_genomic.fa -query EVEs_nl.fa -out EVEs_nl.blast -evalue 1e-10 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
         
         # Only matches with >99% global identity are kept for downstream analyses
         # Filtered BLAST hits can be found here: ./step1.1_BLAST/*.blast.filtered
@@ -71,19 +71,50 @@ Genome annotations of the three species were downloaded from
         
         # Find fast-evolving and slow-evolving genes in Sogatella furcifera, Laodelphax striatellus, and Nilaparvata lugens 
         less -S dist.summary.slowEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Ortholog_Alignment/$a[0].GBlocks.fas ../../step6_LoP/slowGenes/`; '
-        cat *.fas | grep -A 1 Sfur | grep -v "^\-\-" > ../slowGenes.aa.fasta
-        
+
+### 1.4 - Fast-evolving and slow-evolving gene loci in planthopper genomes
+Fast- and slow-evolving protein sequences were first extracted from orthologous groups for each planthopper species. TBLASTN was then used to align proteins to the corresponding genome. Loci of the genes were recorded for level of polymorphism (LoP) calculation. 
+
+        # Copy genes to fast- or slow-evolving gene folder
         less -S dist.summary.fastEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Orthogroup_Sequences/$a[0].fa ./fastGenes/`; '
         less -S dist.summary.slowEvolving | perl -ne '@a=split; print "$a[0]\n"; `cp ./Orthogroup_Sequences/$a[0].fa ./slowGenes/`; '
         
+        # Save protein sequences
+        # Sogatella furcifera
         cat ./fastGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.fastGenes.aa.fasta
         cat ./slowGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.slowGenes.aa.fasta
         
-        # for the manuscript - list all the gene IDs in fast and slow OG group
-        grep ">" slowGenes/*.fa | perl -e 'while(<>){chomp; s/fastGenes\///; @a=split/\:\>/; $hash{$a[0]} .= " ".$a[1]; } foreach $k (sort keys %hash){ print "$k\t$hash{$k}\n"; } '
+        # Laodelphax striatellus
+        cat ./fastGenes/*.fa | grep -A 1 Lstr | grep -v "^\-\-" > ls.fastGenes.aa.fasta
+        cat ./slowGenes/*.fa | grep -A 1 Lstr | grep -v "^\-\-" > ls.slowGenes.aa.fasta
         
+        tblastn -db ls_GCA_014465815.1_genomic.fa -query ls.slowGenes.aa.fasta -out ls.slowGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
+        tblastn -db ls_GCA_014465815.1_genomic.fa -query ls.fastGenes.aa.fasta -out ls.fastGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
         
+        less -S ls.fastGenes.aa.fasta.blast | awk '($5 >= 80){print }' > ls.fastGenes.aa.fasta.blast.filter
+        less -S ls.slowGenes.aa.fasta.blast | awk '($5 >= 80){print }' > ls.slowGenes.aa.fasta.blast.filter
 
+        # Nilaparvata lugens
+        cat ./fastGenes/*.fa | grep -A 1 Nlug | grep -v "^\-\-" > nl.fastGenes.aa.fasta
+        cat ./slowGenes/*.fa | grep -A 1 Nlug | grep -v "^\-\-" > nl.slowGenes.aa.fasta
+        
+        tblastn -db nl_GCA_014356525.1_genomic.fa -query nl.fastGenes.aa.fasta -out nl.fastGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
+        tblastn -db nl_GCA_014356525.1_genomic.fa -query nl.slowGenes.aa.fasta -out nl.slowGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
+        
+        less -S nl.fastGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > nl.fastGenes.aa.fasta.blast.filter
+        less -S nl.slowGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > nl.slowGenes.aa.fasta.blast.filter
+
+        # Sogatella furcifera
+        cat ./fastGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.fastGenes.aa.fasta
+        cat ./slowGenes/*.fa | grep -A 1 Sfur | grep -v "^\-\-" > sf.slowGenes.aa.fasta
+        
+        tblastn -db sf_GCA_014356515.1_genomic.fa -query sf.fastGenes.aa.fasta -out sf.fastGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
+        tblastn -db sf_GCA_014356515.1_genomic.fa -query sf.slowGenes.aa.fasta -out sf.slowGenes.aa.fasta.blast -evalue 1e-5 -outfmt "6 qlen slen qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -num_threads 8
+        
+        less -S sf.fastGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > sf.fastGenes.aa.fasta.blast.filter
+        less -S sf.slowGenes.aa.fasta.blast | awk '($5 >= 80){print;}' > sf.slowGenes.aa.fasta.blast.filter
+        
+        
 
 ## 2 - Distribution of ETLVEs in planthopper individuals
 
