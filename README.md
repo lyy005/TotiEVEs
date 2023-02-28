@@ -152,4 +152,9 @@ To understand the distribution of ETLVEs, we mapped Illumina reads to planthoppe
         ~/bin/gatk-4.2.6.1/gatk VariantFiltration -V output.EVE.g.vcf.gz -filter "AF < 0.1" --filter-name "AF0.1" -O output.EVE.snp_indel_filtered.vcf.gz
         
 ### 2.3 - Perl script to calculate heterozygosity
-        
+        # For each EVE
+        # Example BLAST input: 
+        # 2944	41453656	SfETLVE1_Chr7_length_2944_32054052_32056995	CM025296.1	100.000	2944	0	0	1	2944	32054052	32056995	0.0	5437
+        perl LoP_calculation.all_gene_combined_hetero.v0.9.pl EVEs_sf.blast.modified.EVE1 all_chr_combined.vcf EVEs_sf.blast.modified.EVE1.LoP
+        perl pick_LoP_on_list.pl EVEs_sf.blast.modified.EVE1.LoP EVE1.summary 0.5 sup4_EVEs_sf.blast.modified.EVE1.LoP.exist_samples
+         done
